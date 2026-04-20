@@ -8,11 +8,11 @@ pipeline {
             }
         }
 
-        stage('Stop Old Container') {
+        stage('Stop Old Containers') {
             steps {
                 sh '''
-                docker stop mycontainer || true
-                docker rm mycontainer || true
+                docker ps -q | xargs -r docker stop
+                docker ps -aq | xargs -r docker rm
                 '''
             }
         }
