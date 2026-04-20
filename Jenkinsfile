@@ -7,7 +7,7 @@ pipeline {
                 sh 'docker build -t myapp .'
             }
         }
-
+        
         stage('Stop Old Containers') {
             steps {
                 sh '''
