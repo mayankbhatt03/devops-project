@@ -3,7 +3,8 @@ pipeline {
 
   environment {
     IMAGE_NAME = "portfolio:latest"
-    CONTAINER_NAME = "portfolio"
+    ECR_REPO = "501233818458.dkr.ecr.ap-south-1.amazonaws.com/portfolio:latest"
+    AWS_REGION = "ap-south-1"
   }
 
   stages {
@@ -14,17 +15,34 @@ pipeline {
       }
     }
 
-    stage('Stop Old Container') {
+    stage('Login to ECR') {
       steps {
-        sh 'docker rm -f $CONTAINER_NAME || true'
+        sh '''
+          aws ecr get-login-password --region $AWS_REGION | \
+          docker login --username AWS --password-stdin 501233818458.dkr.ecr.ap-south-1.amazonaws.com
+        '''
       }
     }
 
-    stage('Run Container') {
+    stage('Tag Image') {
       steps {
-        sh 'docker run -d -p 80:80 --name $CONTAINER_NAME $IMAGE_NAME'
+        sh 'docker tag $IMAGE_NAME $ECR_REPO'
       }
     }
 
+    stage('Push to ECR') {
+      steps {
+        sh 'docker push $ECR_REPO'
+      }
+    }
+
+    stage('Deploy Container') {
+      steps {
+        sh '''
+          docker rm -f portfolio || true
+          docker run -d -p 80:80 --name portfolio $IMAGE_NAME
+        '''
+      }
+    }
   }
 }
