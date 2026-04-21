@@ -13,20 +13,32 @@ pipeline {
       }
     }
 
-    stage('Stop Old Container') {
+    stage('Trivy Scan') {
       steps {
         sh '''
-          docker rm -f portfolio || true
+          docker run --rm \
+          -v /var/run/docker.sock:/var/run/docker.sock \
+          aquasec/trivy:latest image \
+          --severity HIGH,CRITICAL \
+          --exit-code 0 \
+          $IMAGE_NAME | tee trivy-report.txt
         '''
       }
     }
 
-    stage('Run Container') {
+    stage('Deploy Container') {
       steps {
         sh '''
+          docker rm -f portfolio || true
           docker run -d -p 80:80 --name portfolio $IMAGE_NAME
         '''
       }
+    }
+  }
+
+  post {
+    always {
+      archiveArtifacts artifacts: 'trivy-report.txt', allowEmptyArchive: true
     }
   }
 }
