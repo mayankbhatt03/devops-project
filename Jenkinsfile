@@ -14,18 +14,17 @@ pipeline {
     }
 
     stage('Trivy Scan') {
-      steps {
-        sh '''
-          docker run --rm \
-          -v /var/run/docker.sock:/var/run/docker.sock \
-          aquasec/trivy:latest image \
-          --severity HIGH,CRITICAL \
-          --exit-code 0 \
-          $IMAGE_NAME | tee trivy-report.txt
-        '''
-      }
-    }
-
+  steps {
+    sh '''
+      docker run --rm \
+      -v /var/run/docker.sock:/var/run/docker.sock \
+      aquasec/trivy:latest image \
+      --severity HIGH,CRITICAL \
+      --exit-code 0 \
+      $IMAGE_NAME > trivy-report.txt
+    '''
+  }
+}
     stage('Deploy Container') {
       steps {
         sh '''
