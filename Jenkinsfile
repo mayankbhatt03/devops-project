@@ -5,6 +5,7 @@ pipeline {
     IMAGE_NAME = "portfolio:latest"
     ECR_REPO = "501233818458.dkr.ecr.ap-south-1.amazonaws.com/portfolio:latest"
     AWS_REGION = "ap-south-1"
+    ACCOUNT_ID = "501233818458"
   }
 
   stages {
@@ -19,7 +20,7 @@ pipeline {
       steps {
         sh '''
           aws ecr get-login-password --region $AWS_REGION | \
-          docker login --username AWS --password-stdin 501233818458.dkr.ecr.ap-south-1.amazonaws.com
+          docker login --username AWS --password-stdin $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
         '''
       }
     }
@@ -36,11 +37,14 @@ pipeline {
       }
     }
 
-    stage('Deploy Container') {
+    stage('Deploy from ECR') {
       steps {
         sh '''
           docker rm -f portfolio || true
-          docker run -d -p 80:80 --name portfolio $IMAGE_NAME
+
+          docker pull $ECR_REPO
+
+          docker run -d -p 80:80 --name portfolio $ECR_REPO
         '''
       }
     }
