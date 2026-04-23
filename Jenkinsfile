@@ -4,7 +4,7 @@ pipeline {
   environment {
     IMAGE_NAME = "portfolio:latest"
     ECR_REPO = "501233818458.dkr.ecr.ap-south-1.amazonaws.com/portfolio:latest"
-    AWS_REGION = "ap-south-1"
+    AWS_REGION = "ap-south-1" 
     ACCOUNT_ID = "501233818458"
   }
 
