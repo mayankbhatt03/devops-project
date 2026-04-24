@@ -6,7 +6,7 @@ environment {
     AWS_ACCOUNT_ID = "501233818458"
     REGION = "ap-south-1"
     IMAGE_NAME = "portfolio"
-    ECR_REPO = "${AWS_ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com/${IMAGE_NAME}"
+    ECR_REPO = "${AWS_ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com/${IMAGE_NAME}" 
 }
 
 stages {
