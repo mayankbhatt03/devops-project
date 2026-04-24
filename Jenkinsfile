@@ -1,52 +1,57 @@
 pipeline {
-  agent any
+agent any
 
-  environment {
-    IMAGE_NAME = "portfolio:latest"
-    ECR_REPO = "501233818458.dkr.ecr.ap-south-1.amazonaws.com/portfolio:latest"
-    AWS_REGION = "ap-south-1" 
-    ACCOUNT_ID = "501233818458"
-  }
+```
+environment {
+    AWS_ACCOUNT_ID = "501233818458"
+    REGION = "ap-south-1"
+    IMAGE_NAME = "portfolio"
+    ECR_REPO = "${AWS_ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com/${IMAGE_NAME}"
+}
 
-  stages {
+stages {
 
-    stage('Build Docker Image') {
-      steps {
-        sh 'docker build -t $IMAGE_NAME .'
-      }
+    stage('Clone Code') {
+        steps {
+            git 'https://github.com/YOUR_USERNAME/YOUR_REPO.git'
+        }
     }
 
-    stage('Login to ECR') {
-      steps {
-        sh '''
-          aws ecr get-login-password --region $AWS_REGION | \
-          docker login --username AWS --password-stdin $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
-        '''
-      }
+    stage('Build Docker Image') {
+        steps {
+            sh 'docker build -t $IMAGE_NAME .'
+        }
     }
 
     stage('Tag Image') {
-      steps {
-        sh 'docker tag $IMAGE_NAME $ECR_REPO'
-      }
+        steps {
+            sh 'docker tag $IMAGE_NAME:latest $ECR_REPO:latest'
+        }
+    }
+
+    stage('Login to ECR') {
+        steps {
+            sh '''
+            aws ecr get-login-password --region $REGION | \
+            docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com
+            '''
+        }
     }
 
     stage('Push to ECR') {
-      steps {
-        sh 'docker push $ECR_REPO'
-      }
+        steps {
+            sh 'docker push $ECR_REPO:latest'
+        }
     }
 
-    stage('Deploy from ECR') {
-      steps {
-        sh '''
-          docker rm -f portfolio || true
-
-          docker pull $ECR_REPO
-
-          docker run -d -p 80:80 --name portfolio $ECR_REPO
-        '''
-      }
+    stage('Deploy to Kubernetes') {
+        steps {
+            sh '''
+            kubectl rollout restart deployment portfolio-deployment
+            '''
+        }
     }
-  }
+}
+```
+
 }
