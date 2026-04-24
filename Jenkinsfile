@@ -1,5 +1,7 @@
 pipeline {
 agent any
+
+```
 environment {
     AWS_ACCOUNT_ID = "501233818458"
     REGION = "ap-south-1"
@@ -38,8 +40,10 @@ stages {
 
     stage('Deploy to Kubernetes') {
         steps {
-            sh 'kubectl rollout restart deployment portfolio-deployment'
+            sh '/usr/local/bin/kubectl rollout restart deployment portfolio-deployment'
         }
     }
 }
+```
+
 }
