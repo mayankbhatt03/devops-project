@@ -9,7 +9,7 @@ pipeline {
     }
 
     stages {
-
+ 
         stage('Clone Code') {
             steps {
                 git 'https://github.com/mayankbhatt03/devops-project.git'
