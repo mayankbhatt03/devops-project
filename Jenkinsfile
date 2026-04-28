@@ -1,69 +1,46 @@
 pipeline {
     agent any
 
-    options {
-        skipDefaultCheckout(true)
-    }
-
     environment {
-        AWS_REGION = "ap-south-1"
-        ECR_REPO = "501233818458.dkr.ecr.ap-south-1.amazonaws.com/portfolio"
-        IMAGE_TAG = "${BUILD_NUMBER}"
+        AWS_ACCOUNT_ID = "501233818458"
+        REGION = "ap-south-1"
+        IMAGE_NAME = "portfolio"
+        ECR_REPO = "${AWS_ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com/${IMAGE_NAME}"
     }
 
     stages {
 
-        stage('Checkout') {
-            steps {
-                git branch: 'main', url: 'https://github.com/mayankbhatt03/devops-project.git'
-            }
-        }
-
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t $ECR_REPO:$IMAGE_TAG .'
+                sh 'docker build -t $IMAGE_NAME .'
             }
         }
 
-        stage('Scan Image') {
+        stage('Tag Image') {
             steps {
-                sh 'trivy image $ECR_REPO:$IMAGE_TAG'
+                sh 'docker tag $IMAGE_NAME:latest $ECR_REPO:latest'
             }
         }
 
         stage('Login to ECR') {
             steps {
-                sh 'aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPO'
+                sh '''
+                aws ecr get-login-password --region $REGION | \
+                docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com
+                '''
             }
         }
 
         stage('Push to ECR') {
             steps {
-                sh 'docker push $ECR_REPO:$IMAGE_TAG'
+                sh 'docker push $ECR_REPO:latest'
             }
         }
 
-        stage('Deploy') {
+        stage('Deploy to Kubernetes') {
             steps {
-                script {
-                    try {
-                        sh 'kubectl set image deployment/portfolio-deployment portfolio=$ECR_REPO:$IMAGE_TAG'
-                        sh 'kubectl rollout status deployment/portfolio-deployment'
-                    } catch (Exception e) {
-                        sh 'kubectl rollout undo deployment portfolio-deployment'
-                        error 'Deployment Failed'
-                    }
-                }
+                sh '/usr/local/bin/kubectl rollout restart deployment portfolio-deployment'
             }
-        }
-    }
-
-    post {
-        success {
-            echo 'Build & Deploy Successful'
-        }
-        failure {
-            echo 'Build Failed or Rolled Back'
         }
     }
 }
