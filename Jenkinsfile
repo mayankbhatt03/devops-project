@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    options {
+        skipDefaultCheckout(true)
+    }
+
     environment {
         AWS_REGION = "ap-south-1"
         ECR_REPO = "501233818458.dkr.ecr.ap-south-1.amazonaws.com/portfolio"
@@ -11,7 +15,7 @@ pipeline {
 
         stage('Checkout') {
             steps {
-                git 'https://github.com/mayankbhatt03/devops-project.git'
+                git branch: 'main', url: 'https://github.com/mayankbhatt03/devops-project.git'
             }
         }
 
