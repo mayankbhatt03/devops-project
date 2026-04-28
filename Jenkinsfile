@@ -1,5 +1,5 @@
 pipeline {
-    agent 
+    agent any
 
     environment {
         AWS_ACCOUNT_ID = "501233818458"
